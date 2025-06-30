@@ -1,0 +1,49 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: dag-
+spec:
+  entrypoint: dag-example
+  templates:
+  - name: dag-example
+    dag:
+      tasks:
+      - name: task-a
+        template: run-task
+        arguments:
+          parameters:
+          - name: task-name
+            value: "Task A"
+
+      - name: task-b
+        template: run-task
+        arguments:
+          parameters:
+          - name: task-name
+            value: "Task B"
+        depends: "task-a"
+
+      - name: task-c
+        template: run-task
+        arguments:
+          parameters:
+          - name: task-name
+            value: "Task C"
+        depends: "task-a"
+
+      - name: task-d
+        template: run-task
+        arguments:
+          parameters:
+          - name: task-name
+            value: "Task D"
+        depends: "task-b && task-c"
+
+  - name: run-task
+    inputs:
+      parameters:
+      - name: task-name
+    container:
+      image: alpine:latest
+      command: [sh, -c]
+      args: ["echo 'Running {{inputs.parameters.task-name}}' && sleep 10 && echo '{{inputs.parameters.task-name}} completed'"]
